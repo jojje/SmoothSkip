@@ -100,9 +100,10 @@ There are some artifacts seen on the interpolated clip (lower left), and it's mv
 Same base license as AviSynth; GNU GPL v2 or later.  
 
 ## Contribute
-Fork it, hack away and send a pull request.
+Fork it at [github], hack away and send a pull request.
 
 [img]: https://griffeltavla.files.wordpress.com/2015/07/smoothskip-fast-white.gif
 [1]: https://www.youtube.com/watch?v=j9cFHYHMQcY
 [2]: http://avisynth.org.ru/mvtools/mvtools.html
 [3]: http://avisynth.org.ru/docs/english/externalfilters/tivtc_tdecimate.htm
+[github]: http://https://github.com/jojje/SmoothSkip
