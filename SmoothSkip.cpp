@@ -37,7 +37,7 @@ PVideoFrame __stdcall SmoothSkip::GetFrame(int n, IScriptEnvironment* env) {
 	// original frame number for child clip
 	int cn = getChildFrameNumber(n);
 	// original frame number for alternate clip, offset as specified by user.
-	int acn = getChildFrameNumber( min(max(n + offset, 0), altclip->GetVideoInfo().num_frames) );
+	int acn = getChildFrameNumber( min(max(n + offset, 0), n) );
 
 	if (!cycle.includes(cn)) {                         // cycle boundary crossed, so update the cycle info.
 		updateCycle(env, cn, child->GetVideoInfo());
