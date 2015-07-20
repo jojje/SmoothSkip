@@ -28,8 +28,9 @@ Cycle::Cycle(){
 }
 
 Cycle::~Cycle() {
-	free(diffs);
-	free(sortedDiffs);
+	if (diffs)       free(diffs);
+	if (sortedDiffs) free(sortedDiffs);
+	if (frameMap)    free(frameMap);
 }
 
 bool Cycle::initialize(int length, int creates) {
@@ -38,7 +39,8 @@ bool Cycle::initialize(int length, int creates) {
 	this->creates = creates;
 	this->diffs = (CycleDiff*)malloc(length * sizeof(CycleDiff));
 	this->sortedDiffs = (CycleDiff*)malloc(length * sizeof(CycleDiff));
-	if (diffs && sortedDiffs) reset();
+	this->frameMap = (FrameMap*)malloc((length + creates) * sizeof(FrameMap));
+	if (diffs && sortedDiffs && frameMap) reset();
 	return diffs && sortedDiffs;
 }
 
@@ -50,6 +52,28 @@ void Cycle::reset() {
 		sortedDiffs[i].diff  = -1;
 	}
 	sorted = false;
+}
+
+void Cycle::updateFrameMap() {
+	if (diffs[0].frame == -1) return;
+
+	int scaledLength = length + creates;
+	int srcCycleStart = diffs[0].frame;
+	int dstCycleStart = srcCycleStart * scaledLength / length;
+	int cn;
+
+	for (int i = 0, di = 0; i < length; i++, di++) {
+		cn = diffs[i].frame;
+		if (isBadFrame(cn)) {
+			frameMap[di].dstframe = dstCycleStart + di;
+			frameMap[di].srcframe = cn;
+			frameMap[di].altclip = true;
+			di++;
+		}
+		frameMap[di].dstframe = dstCycleStart + di;
+		frameMap[di].srcframe = cn;
+		frameMap[di].altclip = false;
+	}
 }
 
 bool Cycle::includes(int frame) {
@@ -68,6 +92,14 @@ bool Cycle::isBadFrame(int frame) {
 		}
 	}
 	return false;
+}
+
+int Cycle::getPreviousBadCount(int n) {
+	int ret = 0;
+	for (int i = diffs[0].frame; i < n; i++) {
+		if (isBadFrame(i)) ret++;
+	}
+	return ret;
 }
 
 int Cycle::getFrameWithLargestDiff(int offset) {

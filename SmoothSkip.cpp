@@ -34,20 +34,15 @@ double GetFps(PClip clip);
 // ==========================================================================
 
 PVideoFrame __stdcall SmoothSkip::GetFrame(int n, IScriptEnvironment* env) {
-	// original frame number for child clip
-	int cn = getChildFrameNumber(n);
-	// original frame number for alternate clip, offset as specified by user.
-	int acn = getChildFrameNumber( min(max(n + offset, 0), n) );
-
-	if (!cycle.includes(cn)) {                         // cycle boundary crossed, so update the cycle info.
-		updateCycle(env, cn, child->GetVideoInfo());
-	}
-
-	// Only alternate the first frame to clip B in case scaled frames point to the same underlying child frame
-	bool alt = cycle.isBadFrame(cn) && cn != acn;
 	PVideoFrame frame;
 
+	FrameMap map = getFrameMapping(env, n);
+	int cn = map.srcframe, acn = cn;
+	bool alt = map.altclip;
+
 	if (alt) {
+		acn = max(cn + offset, 0);                              // original frame number for alternate clip, offset as specified by user.
+		acn = min(acn, altclip->GetVideoInfo().num_frames - 1); // ensure the altclip frame to get is 0 <= x <= last frame number in alt clip
 		frame = altclip->GetFrame(acn, env);
 	} else {
 		frame = child->GetFrame(cn, env);
@@ -99,6 +94,8 @@ void SmoothSkip::updateCycle(IScriptEnvironment* env, int cn, VideoInfo cvi) {
 		cycle.diffs[j].frame = -1;                       // for debugging
 		cycle.diffs[j].diff = -1;                        // for debugging
 	}
+
+	cycle.updateFrameMap();
 }
 
 // Constructor
@@ -177,7 +174,25 @@ double SmoothSkip::GetDiffFromPrevious(IScriptEnvironment* env, PClip clip, int 
 }
 
 int SmoothSkip::getChildFrameNumber(int n) {
-	return (int)(n * GetFps(child) / GetFps(this));
+	int cycles      = n / (cycle.length + cycle.creates);
+	int cycleOffset = n % (cycle.length + cycle.creates);
+	int cycleStart  = cycle.length * cycles;
+	return cycleStart + cycleOffset;
+}
+
+FrameMap SmoothSkip::getFrameMapping(IScriptEnvironment* env, int n) {
+	int cycleCount = n / (cycle.length + cycle.creates);
+	int cycleOffset = n % (cycle.length + cycle.creates);
+	int ccsf = cycleCount * cycle.length;              // child cycle start frame
+
+	if (!cycle.includes(ccsf)) {                       // cycle boundary crossed, so update the cycle info.
+		updateCycle(env, ccsf, child->GetVideoInfo());
+	}
+
+	FrameMap map = cycle.frameMap[cycleOffset];
+	if (map.dstframe != n) raiseError(env, "Frame counting is out of whack");
+
+	return map;
 }
 
 void raiseError(IScriptEnvironment* env, const char* msg) {

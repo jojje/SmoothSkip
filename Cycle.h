@@ -24,6 +24,12 @@ typedef struct {
 	double diff;    // frame diff to previous
 } CycleDiff;
 
+typedef struct {
+	int dstframe;   // frame number in the resulting clip this filter creates
+	int srcframe;   // frame number in one of the source clips
+	bool altclip;   // the clip ("last" or alt) to pick the frame from
+} FrameMap;
+
 class Cycle {
 	bool sorted;
 
@@ -33,6 +39,7 @@ public:
 
 	CycleDiff* diffs;         // Array of frame diffs for the current cycle, in frame order
 	CycleDiff* sortedDiffs;   // Array of frame diffs for the current cycle, in reverse diff order
+	FrameMap* frameMap;       // Clip frame mapping for the current cycle
 
 	Cycle();
 	~Cycle();
@@ -43,11 +50,11 @@ public:
 	int getFrameWithLargestDiff(int offset);
 	bool includes(int frame);
 	bool isBadFrame(int n);
+	int getPreviousBadCount(int n);
 
 	void reset();
 
-private:
-	int getBorderFrame(bool first);
+	void updateFrameMap();
 };
 
 #endif

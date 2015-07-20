@@ -22,7 +22,7 @@
 #include "3rd-party/avisynth.h"
 #include "cycle.h"
 
-#define VERSION "1.0.1"
+#define VERSION "1.0.2"
 
 class SmoothSkip : public GenericVideoFilter {
 	PClip altclip;   // The super clip from MVTools2 
@@ -42,6 +42,7 @@ private:
 	PVideoFrame info(IScriptEnvironment* env, PVideoFrame src, char* msg, int x, int y);
 	int getChildFrameNumber(int n);
 	double GetDiffFromPrevious(IScriptEnvironment* env, PClip clip, int n);
+	FrameMap SmoothSkip::getFrameMapping(IScriptEnvironment* env, int n);
 };
 
 AVSValue __cdecl Create_SmoothSkip(AVSValue args, void* user_data, IScriptEnvironment* env);
