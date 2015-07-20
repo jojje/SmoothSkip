@@ -42,7 +42,7 @@ PVideoFrame __stdcall SmoothSkip::GetFrame(int n, IScriptEnvironment* env) {
 
 	if (alt) {
 		acn = max(cn + offset, 0);                              // original frame number for alternate clip, offset as specified by user.
-		acn = min(acn, altclip->GetVideoInfo().num_frames - 1); // ensure the altclip frame to get is 0 <= x <= last frame number in alt clip
+		acn = min(acn, altclip->GetVideoInfo().num_frames - 1); // ensure the altclip frame to get is 0 <= x <= [last frame number] in alt clip
 		frame = altclip->GetFrame(acn, env);
 	} else {
 		frame = child->GetFrame(cn, env);
@@ -155,13 +155,13 @@ double GetFps(PClip clip) {
 double yDifferenceFromPrevious(IScriptEnvironment* env, PClip clip, int n) {
 	env->SetVar("current_frame", (AVSValue)n);     //    allow us to use RT filters anyway
 
-	AVSValue args[1] = { clip };  // time, ml
+	AVSValue args[1] = { clip };
 	return env->Invoke("YDifferenceFromPrevious", AVSValue(args, 1)).AsFloat();
 }
 
 double TcDifferenceFromPrevious(IScriptEnvironment* env, PClip clip, int n) {
 	env->SetVar("current_frame", (AVSValue)n);     //    allow us to use RT filters anyway
-	AVSValue args[1] = { clip };  // time, ml
+	AVSValue args[1] = { clip };
 	return env->Invoke("CFrameDiff", AVSValue(args, 1)).AsFloat();
 }
 
