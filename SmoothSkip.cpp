@@ -106,10 +106,14 @@ SmoothSkip::SmoothSkip(PClip _child, PClip _altclip, int cycleLen, int creates, 
 	                   int _diffmethod, bool _debug, IScriptEnvironment* env) :
 GenericVideoFilter(_child), altclip(_altclip), offset(_offset), diffmethod(_diffmethod), debug(_debug) {
 	VideoInfo avi = altclip->GetVideoInfo();
+	VideoInfo cvi = child->GetVideoInfo();
 	if (!(vi.IsYV12() || vi.IsYUY2())) raiseError(env, "Input clip must be YV12 or YUY2");
 	if (!(avi.IsYV12() || avi.IsYUY2())) raiseError(env, "Alternate clip must be YV12 or YUY2");
 
 	if (cycleLen < 1) raiseError(env, "Cycle must be > 0");
+	if (cycleLen > cvi.num_frames) raiseError(env, "Cycle can't be larger than the frames in source clip");
+	if (cycleLen > avi.num_frames) raiseError(env, "Cycle can't be larger than the frames in alt clip");
+	if (creates < 1 || creates > cycleLen) raiseError(env, "Create must be between 1 and the value of cycle (1 <= create <= cycle)");
 	if (!(diffmethod == 0 || diffmethod == 1)) raiseError(env, "Diff method (dm) must be 0 or 1");
 	if (!cycle.initialize(cycleLen, creates)) raiseError(env, "Failed to allocate cycle memory");
 
