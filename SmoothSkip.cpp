@@ -117,8 +117,8 @@ GenericVideoFilter(_child), altclip(_altclip), offset(_offset), diffmethod(_diff
 	if (!(diffmethod == 0 || diffmethod == 1)) raiseError(env, "Diff method (dm) must be 0 or 1");
 	if (!cycle.initialize(cycleLen, creates)) raiseError(env, "Failed to allocate cycle memory");
 
-	int newFrames = (vi.num_frames / cycleLen) * creates;    // a non-full last cycle will still introduce a new frame
-	newFrames += min(vi.num_frames % cycleLen, creates);
+	int newFrames = (vi.num_frames / cycleLen) * creates;    // a non-full last cycle will still introduce a new frame.
+	newFrames += min(vi.num_frames % cycleLen, creates);     // account for when the last clip cycle isn't a full one.
 	vi.MulDivFPS(cycleLen + creates, cycleLen);
 	vi.num_frames += newFrames;
 
