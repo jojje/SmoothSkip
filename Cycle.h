@@ -50,7 +50,6 @@ public:
 	int getFrameWithLargestDiff(int offset);
 	bool includes(int frame);
 	bool isBadFrame(int n);
-	int getPreviousBadCount(int n);
 
 	void reset();
 

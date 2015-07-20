@@ -40,7 +40,6 @@ public:
 private:
 	void updateCycle(IScriptEnvironment* env, int n, VideoInfo cvi);
 	PVideoFrame info(IScriptEnvironment* env, PVideoFrame src, char* msg, int x, int y);
-	int getChildFrameNumber(int n);
 	double GetDiffFromPrevious(IScriptEnvironment* env, PClip clip, int n);
 	FrameMap SmoothSkip::getFrameMapping(IScriptEnvironment* env, int n);
 };

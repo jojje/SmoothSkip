@@ -173,13 +173,6 @@ double SmoothSkip::GetDiffFromPrevious(IScriptEnvironment* env, PClip clip, int 
 	}
 }
 
-int SmoothSkip::getChildFrameNumber(int n) {
-	int cycles      = n / (cycle.length + cycle.creates);
-	int cycleOffset = n % (cycle.length + cycle.creates);
-	int cycleStart  = cycle.length * cycles;
-	return cycleStart + cycleOffset;
-}
-
 FrameMap SmoothSkip::getFrameMapping(IScriptEnvironment* env, int n) {
 	int cycleCount = n / (cycle.length + cycle.creates);
 	int cycleOffset = n % (cycle.length + cycle.creates);

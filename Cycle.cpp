@@ -94,14 +94,6 @@ bool Cycle::isBadFrame(int frame) {
 	return false;
 }
 
-int Cycle::getPreviousBadCount(int n) {
-	int ret = 0;
-	for (int i = diffs[0].frame; i < n; i++) {
-		if (isBadFrame(i)) ret++;
-	}
-	return ret;
-}
-
 int Cycle::getFrameWithLargestDiff(int offset) {
 	if (!sorted) {
 		memcpy(sortedDiffs, diffs, length * sizeof(CycleDiff));
