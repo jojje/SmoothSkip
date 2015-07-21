@@ -18,7 +18,6 @@
 
 #include <Windows.h>
 #include <stdio.h>
-#include <new>
 #include "SmoothSkip.h"
 #include "3rd-party/info.h"
 
@@ -77,7 +76,6 @@ PVideoFrame __stdcall SmoothSkip::GetFrame(int n, IScriptEnvironment* env) {
 
 void SmoothSkip::updateCycle(IScriptEnvironment* env, int cn, VideoInfo cvi) {
 	double diff = 0;
-	double maxDiff = -1;
 	int i, j;
 
 	cycle.reset();
