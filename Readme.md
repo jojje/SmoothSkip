@@ -102,6 +102,11 @@ Same base license as AviSynth; GNU GPL v2 or later.
 ## Contribute
 Fork it at [github], hack away and send a pull request.
 
+## Release notes
+* 1.0.2 Fix bounds check on user input
+* 1.0.1 Fix for invalid end-frame calculation
+* 1.0.0 Initial release
+
 [img]: https://griffeltavla.files.wordpress.com/2015/07/smoothskip-fast-white.gif
 [1]: https://www.youtube.com/watch?v=j9cFHYHMQcY
 [2]: http://avisynth.org.ru/mvtools/mvtools.html
