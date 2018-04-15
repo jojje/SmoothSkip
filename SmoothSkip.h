@@ -22,7 +22,7 @@
 #include "3rd-party/avisynth.h"
 #include "cycle.h"
 
-#define VERSION "1.0.2"
+#define VERSION "1.0.3"
 
 class SmoothSkip : public GenericVideoFilter {
 	PClip altclip;   // The super clip from MVTools2 
