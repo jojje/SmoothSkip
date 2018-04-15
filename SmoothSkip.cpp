@@ -17,14 +17,20 @@
 // USA.
 
 #include <Windows.h>
+#include <thread>
 #include <stdio.h>
 #include "SmoothSkip.h"
 #include "3rd-party/info.h"
+#include "3rd-party/avsutil.h"
 
+#ifdef _DEBUG
+	#define DEBUG_LOG 1
+#else
+	#define DEBUG_LOG 0
+#endif
 
-// clip is the clip to have its frame compared,
-// n = frame number to compare to its previous
-double GetDiffFromPrevious(IScriptEnvironment* env, PClip clip, int n);
+CRITICAL_SECTION lock;
+
 void raiseError(IScriptEnvironment* env, const char* msg);
 double GetFps(PClip clip);
 
@@ -34,6 +40,22 @@ double GetFps(PClip clip);
 
 PVideoFrame __stdcall SmoothSkip::GetFrame(int n, IScriptEnvironment* env) {
 	PVideoFrame frame;
+
+	EnterCriticalSection(&lock);   // Naive support for MT 2 mode. Make access essentially single-treaded.
+	                               // Approx. 20% slow down with 8 threads in MT mode 2 compared to single-threaded.
+	                               // Still > 400 FPS for 1080P clip on i4770 CPU so should not be the bottleneck.
+
+	AVSValue prev_current_frame = GetVar(env, "current_frame"); // Store previous current_frame
+	env->SetVar("current_frame", n);                            // Set frame to be tested by the conditional filters
+	env->SetGlobalVar("current_frame", n);
+
+	if (DEBUG_LOG) {
+		char BUF[256];
+		std::thread::id tid = std::this_thread::get_id();
+		#pragma warning(suppress: 4477)
+		sprintf(BUF, "frame %d, cycle-address %X, thread-id: %X\n", n, (unsigned int)&cycle, tid);
+		printf(BUF);
+	}
 
 	FrameMap map = getFrameMapping(env, n);
 	int cn = map.srcframe, acn = cn;
@@ -71,6 +93,10 @@ PVideoFrame __stdcall SmoothSkip::GetFrame(int n, IScriptEnvironment* env) {
 		}
 	}
 
+	env->SetVar("current_frame", prev_current_frame);           // Restore current_frame
+	// env->SetGlobalVar("current_frame", prev_current_frame);  // Scope uncertain in MT mode. Restoring this may interfere with other filters in MT mode, if they also explicitly set this magic variable and we unset it during parallel plugin execution.
+
+	LeaveCriticalSection(&lock);
 	return frame;
 }
 
@@ -124,6 +150,8 @@ SmoothSkip::~SmoothSkip() {
 }
 
 AVSValue __cdecl Create_SmoothSkip(AVSValue args, void* user_data, IScriptEnvironment* env) {
+	InitializeCriticalSection(&lock);
+
 	return new SmoothSkip(args[0].AsClip(),
 		args[1].AsClip(),      // altclip
 		args[2].AsInt(4),      // cycle
@@ -151,14 +179,11 @@ double GetFps(PClip clip) {
 }
 
 double yDifferenceFromPrevious(IScriptEnvironment* env, PClip clip, int n) {
-	env->SetVar("current_frame", (AVSValue)n);     //    allow us to use RT filters anyway
-
 	AVSValue args[1] = { clip };
 	return env->Invoke("YDifferenceFromPrevious", AVSValue(args, 1)).AsFloat();
 }
 
 double TcDifferenceFromPrevious(IScriptEnvironment* env, PClip clip, int n) {
-	env->SetVar("current_frame", (AVSValue)n);     //    allow us to use RT filters anyway
 	AVSValue args[1] = { clip };
 	return env->Invoke("CFrameDiff", AVSValue(args, 1)).AsFloat();
 }
