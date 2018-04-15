@@ -114,10 +114,6 @@ void SmoothSkip::updateCycle(IScriptEnvironment* env, int cn, VideoInfo cvi) {
 		cycle.diffs[j].frame = i;
 		cycle.diffs[j].diff = diff;
 	}
-	for (; j < cycle.length - 1; j++) {                  // for debugging
-		cycle.diffs[j].frame = -1;                       // for debugging
-		cycle.diffs[j].diff = -1;                        // for debugging
-	}
 
 	cycle.updateFrameMap();
 }
