@@ -31,6 +31,7 @@ class SmoothSkip : public GenericVideoFilter {
 	int diffmethod;  // scheme for diffing with adjecent frame. Either built in avisynth (0) or tritical's CFrameDiff from TDecimate (1)
 
 	Cycle cycle;     // stutter cycle
+	PClip diffClip;  // created lazily, when the first frame is requested
 
 public:
 	SmoothSkip(PClip _child, PClip _altclip, int cycleLen, int creates, int offset, 
@@ -40,8 +41,9 @@ public:
 private:
 	void updateCycle(IScriptEnvironment* env, int n, VideoInfo cvi);
 	PVideoFrame info(IScriptEnvironment* env, PVideoFrame src, char* msg, int x, int y);
-	double GetDiffFromPrevious(IScriptEnvironment* env, PClip clip, int n);
+	double GetDiffFromPrevious(IScriptEnvironment* env, int n);
 	FrameMap SmoothSkip::getFrameMapping(IScriptEnvironment* env, int n);
+	void initDiffClip(IScriptEnvironment* env);
 };
 
 AVSValue __cdecl Create_SmoothSkip(AVSValue args, void* user_data, IScriptEnvironment* env);

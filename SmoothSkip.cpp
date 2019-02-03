@@ -33,6 +33,7 @@ CRITICAL_SECTION lock;
 
 void raiseError(IScriptEnvironment* env, const char* msg);
 double GetFps(PClip clip);
+void initDiffClip(int diffmethod, PClip child, IScriptEnvironment* env);
 
 // ==========================================================================
 // PUBLIC methods
@@ -46,8 +47,6 @@ PVideoFrame __stdcall SmoothSkip::GetFrame(int n, IScriptEnvironment* env) {
 	                               // Still > 400 FPS for 1080P clip on i4770 CPU so should not be the bottleneck.
 
 	AVSValue prev_current_frame = GetVar(env, "current_frame"); // Store previous current_frame
-	env->SetVar("current_frame", n);                            // Set frame to be tested by the conditional filters
-	env->SetGlobalVar("current_frame", n);
 
 	if (DEBUG_LOG) {
 		char BUF[256];
@@ -110,12 +109,26 @@ void SmoothSkip::updateCycle(IScriptEnvironment* env, int cn, VideoInfo cvi) {
 	int cycleEndFrame = min(cycleStartFrame + cycle.length - 1, cvi.num_frames - 1);
 
 	for (i = cycleStartFrame, j = 0; i <= cycleEndFrame; i++, j++) {
-		diff = GetDiffFromPrevious(env, child, i);
+		diff = GetDiffFromPrevious(env, i);
 		cycle.diffs[j].frame = i;
 		cycle.diffs[j].diff = diff;
 	}
 
 	cycle.updateFrameMap();
+}
+
+void SmoothSkip::initDiffClip(IScriptEnvironment* env) {
+	if (diffClip != NULL)
+		return;
+
+	if (diffmethod == 1) {
+		AVSValue args[2] = { child, "diff = CFrameDiff \r\n last"};
+		diffClip = env->Invoke("ScriptClip", AVSValue(args, 2)).AsClip();
+	}
+	else {
+		AVSValue args[2] = { child, "diff = YDifferenceFromPrevious \r\n last" };
+		diffClip = env->Invoke("ScriptClip", AVSValue(args, 2)).AsClip();
+	}
 }
 
 // Constructor
@@ -140,9 +153,12 @@ GenericVideoFilter(_child), altclip(_altclip), offset(_offset), diffmethod(_diff
 	vi.num_frames += newFrames;
 
 	child->SetCacheHints(CACHE_RANGE, cycle.length);
+
+	initDiffClip(env);
 }
 
 SmoothSkip::~SmoothSkip() {
+	diffClip = NULL;
 }
 
 AVSValue __cdecl Create_SmoothSkip(AVSValue args, void* user_data, IScriptEnvironment* env) {
@@ -184,12 +200,11 @@ double TcDifferenceFromPrevious(IScriptEnvironment* env, PClip clip, int n) {
 	return env->Invoke("CFrameDiff", AVSValue(args, 1)).AsFloat();
 }
 
-double SmoothSkip::GetDiffFromPrevious(IScriptEnvironment* env, PClip clip, int n) {
-	if (diffmethod == 1) {
-		return TcDifferenceFromPrevious(env, child, n);
-	} else {
-		return yDifferenceFromPrevious(env, child, n);
-	}
+double SmoothSkip::GetDiffFromPrevious(IScriptEnvironment* env, int n) {
+	env->SetVar("current_frame", n);        // Set frame to be tested by the conditional filters
+	env->SetGlobalVar("current_frame", n);
+	diffClip->GetFrame(n, env);
+	return env->GetVar("diff").AsFloat();
 }
 
 FrameMap SmoothSkip::getFrameMapping(IScriptEnvironment* env, int n) {
