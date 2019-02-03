@@ -7,7 +7,7 @@ A filter plugin for AviSynth that finds the biggest frame difference(s) in cycle
 ## Usage
 The filter signature is as follows
 ```
-SmoothSkip( altClip, int "cycle", int "create", int "offset", int "dm", bool "debug" )
+SmoothSkip( altClip, int "cycle", int "create", int "offset", bool "debug" )
 
 ```
 Options:
@@ -25,12 +25,6 @@ Default: `1`
 * `offset`: Frame offset used to pick an insertion frame from the alternate clip (*altclip*).  
 When scripting AviSynth, users are prevented from accessing individual frames, as selecting frames is the purview of the application leveraging AviSynth. Filter plugins however have greater flexibility and can pick and choose which frame to use and this *offset* option gives you some flexibility in selecting replacement frames that do not necessarily reside at the same frame number as the primary clip's. Of course, you could achieve the effect of fixed offset like this by using *Trim* and *Loop*, so this is just a shorthand to save you from having to stitch and slice clips in the script.  
 Default: `-1` (frame with number before current_frame)
-
-* `dm`: Diff method. Valid options: 0 or 1.  
-Scheme to use for determining how simiar / different a frame is to its preceding one. Supported schemes are:  
-0: The built-in ydifference function is used to measure how similar frames are.  
-1: Uses *FrameDiff* from the *TDecimate* filter plugin, which is more robust in certain scenarios. To use this option it is required that you've loaded Trical's filter into the script runtime, else no joy.  
-Default: `0`
 
 * `debug`: Display various internal metrics as an image overlay.  
 Default: `false`
@@ -65,22 +59,20 @@ The following example expands on example 2 by adding the TDecimate filter to the
 # cycle is as described above and means the same thing to TDecimate and SmoothSkip.
 # dupes means n.o. duplicate frames in cycle and corresponds to *cycleR* in TDecimate.
 # skips means skips in cycle and corresponds to *create* above.
-# dm is the difference detection method, same as described above.
 # debug has a new meaning, since all the filters have debug options. 
 #   1 means show TDecimate debug overlay 
 #   2 means the overlay from SmoothSkip
-function SmoothMotion(clip last, int "cycle", int "dupes", int "skips", int "dm", int "debug" ) {
+function SmoothMotion(clip last, int "cycle", int "dupes", int "skips", int "debug" ) {
   cycle  = default(cycle,  4)
   dupes  = default(dupes,  1)
   skips  = default(skips,  1)
-  dm     = default(dm,     0)
   debug  = default(debug,  0)
   TDecimate(cycle=cycle, cycleR=dupes, display=(debug == 1))
   super = MSuper()
   bv = MAnalyse(super, overlap=4, isb = true, search=3)
   fv = MAnalyse(super, overlap=4, isb = false, search=3)
   inter = MFlowInter(super, bv, fv, time=50, ml=70)
-  SmoothSkip(inter, cycle=(cycle-dupes), create=skips, offset=-1, dm=dm, debug=(debug == 2))
+  SmoothSkip(inter, cycle=(cycle-dupes), create=skips, offset=-1, debug=(debug == 2))
 }
 avisource("myclip.avi")
 SmoothMotion(cycle=4, debug=2)

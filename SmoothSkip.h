@@ -30,12 +30,11 @@ class SmoothSkip : public GenericVideoFilter {
 	PClip altclip;   // The super clip from MVTools2 
 	bool debug;      // debug arg
 	int offset;      // frame offset used to get frame from the alternate clip.
-	int diffmethod;  // scheme for diffing with adjecent frame. Either built in avisynth (0) or tritical's CFrameDiff from TDecimate (1)
 
 public:
 	CycleCache* cycles;
 	SmoothSkip(PClip _child, PClip _altclip, int cycleLen, int creates, int offset, 
-		       int _diffmethod, bool _debug, IScriptEnvironment* env);
+		       bool _debug, IScriptEnvironment* env);
 	~SmoothSkip();
 	PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env);
 private:
@@ -48,7 +47,7 @@ private:
 AVSValue __cdecl Create_SmoothSkip(AVSValue args, void* user_data, IScriptEnvironment* env);
 
 extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit2(IScriptEnvironment* env) {
-	env->AddFunction("SmoothSkip", "cc[CYCLE]i[CREATE]i[OFFSET]i[dm]i[DEBUG]b", Create_SmoothSkip, 0);
+	env->AddFunction("SmoothSkip", "cc[CYCLE]i[CREATE]i[OFFSET]i[DEBUG]b", Create_SmoothSkip, 0);
 	return "'SmoothSkip' plugin v" VERSION ", author: tinjon[at]gmail.com";
 }
 

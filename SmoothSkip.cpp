@@ -74,8 +74,6 @@ PVideoFrame __stdcall SmoothSkip::GetFrame(int n, IScriptEnvironment* env) {
 		frame = info(env, frame, msg, 0, row++);
 		sprintf(msg, "Using: %d, clip %s", (alt ? acn : cn), (alt ? "B" : "A"));
 		frame = info(env, frame, msg, 0, row++);
-		sprintf(msg, "DM:    %s", diffmethod == 1 ? "CFrameDiff" : "YDiff");
-		frame = info(env, frame, msg, 0, row++);
 		sprintf(msg, "FPS:   %.3f (child: %.3f)", GetFps(this), GetFps(child));
 		frame = info(env, frame, msg, 0, row++);
 		sprintf(msg, "Cycle frame diffs (child):");
@@ -112,8 +110,8 @@ void SmoothSkip::updateCycle(IScriptEnvironment* env, int cn, VideoInfo cvi, Cyc
 
 // Constructor
 SmoothSkip::SmoothSkip(PClip _child, PClip _altclip, int cycleLen, int creates, int _offset, 
-	                   int _diffmethod, bool _debug, IScriptEnvironment* env) :
-GenericVideoFilter(_child), altclip(_altclip), offset(_offset), diffmethod(_diffmethod), debug(_debug) {
+	                   bool _debug, IScriptEnvironment* env) :
+GenericVideoFilter(_child), altclip(_altclip), offset(_offset), debug(_debug) {
 	VideoInfo avi = altclip->GetVideoInfo();
 	VideoInfo cvi = child->GetVideoInfo();
 	if (!(vi.IsYV12() || vi.IsYUY2())) raiseError(env, "Input clip must be YV12 or YUY2");
@@ -123,7 +121,6 @@ GenericVideoFilter(_child), altclip(_altclip), offset(_offset), diffmethod(_diff
 	if (cycleLen > cvi.num_frames) raiseError(env, "Cycle can't be larger than the frames in source clip");
 	if (cycleLen > avi.num_frames) raiseError(env, "Cycle can't be larger than the frames in alt clip");
 	if (creates < 1 || creates > cycleLen) raiseError(env, "Create must be between 1 and the value of cycle (1 <= create <= cycle)");
-	if (!(diffmethod == 0 || diffmethod == 1)) raiseError(env, "Diff method (dm) must be 0 or 1");
 
 	try {
 		cycles = new CycleCache(cycleLen, creates, cvi.num_frames);
@@ -153,8 +150,7 @@ AVSValue __cdecl Create_SmoothSkip(AVSValue args, void* user_data, IScriptEnviro
 		args[2].AsInt(4),      // cycle
 		args[3].AsInt(1),      // create
 		args[4].AsInt(0),      // offset
-		args[5].AsInt(0),      // dm (diffmethod)
-		args[6].AsBool(false), // debug
+		args[5].AsBool(false), // debug
 		env);
 }
 
