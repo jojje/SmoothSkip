@@ -17,7 +17,7 @@
 // USA.
 
 #include <Windows.h>
-#include <thread>
+#include <mutex>
 #include <stdio.h>
 #include "SmoothSkip.h"
 #include "CycleCache.h"
@@ -30,10 +30,9 @@
 	#define DEBUG 0
 #endif
 
-CRITICAL_SECTION lock;
-
 void raiseError(IScriptEnvironment* env, const char* msg);
 double GetFps(PClip clip);
+std::mutex frameMappingMutex;
 
 // ==========================================================================
 // PUBLIC methods
@@ -42,20 +41,20 @@ double GetFps(PClip clip);
 PVideoFrame __stdcall SmoothSkip::GetFrame(int n, IScriptEnvironment* env) {
 	PVideoFrame frame;
 
-	EnterCriticalSection(&lock);    // Comparison of the source clip's previous frame is currently done single-threaded.
-
 	Cycle &cycle = *cycles->GetCycleForFrame(n);
 
 	if (DEBUG) {
+		auto tid = GetCurrentThreadId();
 		printf("frame %d, cycle-address %X, thread-id: %X\n", n, (unsigned int)&cycle, GetCurrentThreadId());
 	}
 
+	// Comparison of the source clip's previous frame is currently done single-threaded.
 	FrameMap map = getFrameMapping(env, n);
+
+	// Fetching the alternative clip, or the source clip a second time
+	// (from avisynth-cache) is done multi-threaded.
 	int cn = map.srcframe, acn = cn;
 	bool alt = map.altclip;
-
-	LeaveCriticalSection(&lock);    // Fetching the alternative clip, or the source clip a second time
-	                                // (from avisynth-cache) is done multi-threaded.
 
 	if (alt) {
 		acn = max(cn + offset, 0);                              // original frame number for alternate clip, offset as specified by user.
@@ -135,12 +134,9 @@ GenericVideoFilter(_child), altclip(_altclip), offset(_offset), debug(_debug) {
 	vi.num_frames += newFrames;
 
 	child->SetCacheHints(CACHE_RANGE, cycleLen);
-
-	InitializeCriticalSection(&lock);
 }
 
 SmoothSkip::~SmoothSkip() {
-	DeleteCriticalSection(&lock);
 	delete cycles;
 }
 
@@ -178,17 +174,21 @@ FrameMap SmoothSkip::getFrameMapping(IScriptEnvironment* env, int n) {
 	Cycle& cycle = *cycles->GetCycleForFrame(n);
 	int cycleCount = n / (cycle.length + cycle.creates);
 	int cycleOffset = n % (cycle.length + cycle.creates);
-	int ccsf = cycleCount * cycle.length;              // child cycle start frame
+	int ccsf = cycleCount * cycle.length;                          // Child cycle start frame
 
-	if (!cycle.includes(ccsf)) {                       // cycle boundary crossed, so update the cycle info.
-		if (DEBUG) {
-			printf("Frame %d not in cycle, updating!\n", n);
+	{
+		std::lock_guard<std::mutex> lockGuard(frameMappingMutex);  // Ensure only one thread updates the frame map at a time to optimize disk I/O and Avisynth cache use.
+		if (!cycle.includes(ccsf)) {                               // Cycle stats have not been computed, so try to update the cycle.
+			if (DEBUG) {
+				printf("Frame %d not in cycle, updating!\n", n);
+			}
+			updateCycle(env, ccsf, child->GetVideoInfo(), cycle);
 		}
-		updateCycle(env, ccsf, child->GetVideoInfo(), cycle);
 	}
 
 	FrameMap map = cycle.frameMap[cycleOffset];
-	if (map.dstframe != n) raiseError(env, "Frame counting is out of whack");
+	if (map.dstframe != n)
+		raiseError(env, "Frame counting is out of whack");
 
 	return map;
 }
