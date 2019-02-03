@@ -22,10 +22,14 @@
 
 int cmpDescendingDiff(const void * a, const void * b);
 
-Cycle::Cycle(int length, int creates) : length(length), creates(creates){
-	this->diffs = std::make_unique<CycleDiff[]>(length);
-	this->sortedDiffs = std::make_unique<CycleDiff[]>(length);
-	this->frameMap = std::make_unique<FrameMap[]>(length + creates);
+Cycle::Cycle(int length, int creates) :
+	length(length),
+	creates(creates),
+	diffs(std::make_unique<CycleDiff[]>(length)),
+	sortedDiffs(std::make_unique<CycleDiff[]>(length)),
+	frameMap(std::make_unique<FrameMap[]>(length + creates)),
+	sorted(false)
+{
 	reset();
 }
 
@@ -90,6 +94,8 @@ int Cycle::getFrameWithLargestDiff(int offset) {
 }
 
 int cmpDescendingDiff(const void * a, const void * b) {
-	double result = ((*(CycleDiff*)a).diff - (*(CycleDiff*)b).diff);
+	auto pa = reinterpret_cast<const CycleDiff*>(a);
+	auto pb = reinterpret_cast<const CycleDiff*>(b);
+	double result = static_cast<double>(pa->diff) - static_cast<double>(pb->diff);
 	return result > 0 ? -1 : result < 0 ? 1 : 0;
 }

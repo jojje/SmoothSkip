@@ -257,5 +257,5 @@ float YDiff(AVSValue clip, int n, int offset, IScriptEnvironment* env) {
 			}
 	}
 
-	return (float)(sad / (height * width));
+	return (float)(sad / ((double)height * width));
 }
