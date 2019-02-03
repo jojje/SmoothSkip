@@ -21,8 +21,8 @@
 #include <stdio.h>
 #include "SmoothSkip.h"
 #include "CycleCache.h"
+#include "FrameDiff.h"
 #include "3rd-party/info.h"
-#include "3rd-party/avsutil.h"
 
 #ifdef _DEBUG
 	#define DEBUG 1
@@ -34,7 +34,6 @@ CRITICAL_SECTION lock;
 
 void raiseError(IScriptEnvironment* env, const char* msg);
 double GetFps(PClip clip);
-void initDiffClip(int diffmethod, PClip child, IScriptEnvironment* env);
 
 // ==========================================================================
 // PUBLIC methods
@@ -43,11 +42,8 @@ void initDiffClip(int diffmethod, PClip child, IScriptEnvironment* env);
 PVideoFrame __stdcall SmoothSkip::GetFrame(int n, IScriptEnvironment* env) {
 	PVideoFrame frame;
 
-	EnterCriticalSection(&lock);   // Naive support for MT 2 mode. Make access essentially single-treaded.
-	                               // Approx. 20% slow down with 8 threads in MT mode 2 compared to single-threaded.
-	                               // Still > 400 FPS for 1080P clip on i4770 CPU so should not be the bottleneck.
+	EnterCriticalSection(&lock);    // Comparison of the source clip's previous frame is currently done single-threaded.
 
-	AVSValue prev_current_frame = GetVar(env, "current_frame"); // Store previous current_frame
 	Cycle &cycle = *cycles->GetCycleForFrame(n);
 
 	if (DEBUG) {
@@ -57,6 +53,9 @@ PVideoFrame __stdcall SmoothSkip::GetFrame(int n, IScriptEnvironment* env) {
 	FrameMap map = getFrameMapping(env, n);
 	int cn = map.srcframe, acn = cn;
 	bool alt = map.altclip;
+
+	LeaveCriticalSection(&lock);    // Fetching the alternative clip, or the source clip a second time
+	                                // (from avisynth-cache) is done multi-threaded.
 
 	if (alt) {
 		acn = max(cn + offset, 0);                              // original frame number for alternate clip, offset as specified by user.
@@ -90,10 +89,6 @@ PVideoFrame __stdcall SmoothSkip::GetFrame(int n, IScriptEnvironment* env) {
 		}
 	}
 
-	env->SetVar("current_frame", prev_current_frame);           // Restore current_frame
-	// env->SetGlobalVar("current_frame", prev_current_frame);  // Scope uncertain in MT mode. Restoring this may interfere with other filters in MT mode, if they also explicitly set this magic variable and we unset it during parallel plugin execution.
-
-	LeaveCriticalSection(&lock);
 	return frame;
 }
 
@@ -115,20 +110,6 @@ void SmoothSkip::updateCycle(IScriptEnvironment* env, int cn, VideoInfo cvi, Cyc
 	cycle.updateFrameMap();
 }
 
-void SmoothSkip::initDiffClip(IScriptEnvironment* env) {
-	if (diffClip != NULL)
-		return;
-
-	if (diffmethod == 1) {
-		AVSValue args[2] = { child, "diff = CFrameDiff \r\n last"};
-		diffClip = env->Invoke("ScriptClip", AVSValue(args, 2)).AsClip();
-	}
-	else {
-		AVSValue args[2] = { child, "diff = YDifferenceFromPrevious \r\n last" };
-		diffClip = env->Invoke("ScriptClip", AVSValue(args, 2)).AsClip();
-	}
-}
-
 // Constructor
 SmoothSkip::SmoothSkip(PClip _child, PClip _altclip, int cycleLen, int creates, int _offset, 
 	                   int _diffmethod, bool _debug, IScriptEnvironment* env) :
@@ -143,7 +124,6 @@ GenericVideoFilter(_child), altclip(_altclip), offset(_offset), diffmethod(_diff
 	if (cycleLen > avi.num_frames) raiseError(env, "Cycle can't be larger than the frames in alt clip");
 	if (creates < 1 || creates > cycleLen) raiseError(env, "Create must be between 1 and the value of cycle (1 <= create <= cycle)");
 	if (!(diffmethod == 0 || diffmethod == 1)) raiseError(env, "Diff method (dm) must be 0 or 1");
-	//if (!cycle.initialize(cycleLen, creates)) raiseError(env, "Failed to allocate cycle memory");
 
 	try {
 		cycles = new CycleCache(cycleLen, creates, cvi.num_frames);
@@ -159,17 +139,15 @@ GenericVideoFilter(_child), altclip(_altclip), offset(_offset), diffmethod(_diff
 
 	child->SetCacheHints(CACHE_RANGE, cycleLen);
 
-	initDiffClip(env);
+	InitializeCriticalSection(&lock);
 }
 
 SmoothSkip::~SmoothSkip() {
-	diffClip = NULL;
+	DeleteCriticalSection(&lock);
 	delete cycles;
 }
 
 AVSValue __cdecl Create_SmoothSkip(AVSValue args, void* user_data, IScriptEnvironment* env) {
-	InitializeCriticalSection(&lock);
-
 	return new SmoothSkip(args[0].AsClip(),
 		args[1].AsClip(),      // altclip
 		args[2].AsInt(4),      // cycle
@@ -197,10 +175,7 @@ double GetFps(PClip clip) {
 }
 
 double SmoothSkip::GetDiffFromPrevious(IScriptEnvironment* env, int n) {
-	env->SetVar("current_frame", n);        // Set frame to be tested by the conditional filters
-	env->SetGlobalVar("current_frame", n);
-	diffClip->GetFrame(n, env);
-	return env->GetVar("diff").AsFloat();
+	return YDiff(child, n, -1, env);
 }
 
 FrameMap SmoothSkip::getFrameMapping(IScriptEnvironment* env, int n) {

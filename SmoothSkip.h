@@ -22,6 +22,7 @@
 #include "3rd-party/avisynth.h"
 #include "cycle.h"
 #include "CycleCache.h"
+#include "FrameDiff.h"
 
 #define VERSION "1.0.3"
 
@@ -30,8 +31,6 @@ class SmoothSkip : public GenericVideoFilter {
 	bool debug;      // debug arg
 	int offset;      // frame offset used to get frame from the alternate clip.
 	int diffmethod;  // scheme for diffing with adjecent frame. Either built in avisynth (0) or tritical's CFrameDiff from TDecimate (1)
-
-	PClip diffClip;  // created lazily, when the first frame is requested
 
 public:
 	CycleCache* cycles;
@@ -44,7 +43,6 @@ private:
 	PVideoFrame info(IScriptEnvironment* env, PVideoFrame src, char* msg, int x, int y);
 	double GetDiffFromPrevious(IScriptEnvironment* env, int n);
 	FrameMap SmoothSkip::getFrameMapping(IScriptEnvironment* env, int n);
-	void initDiffClip(IScriptEnvironment* env);
 };
 
 AVSValue __cdecl Create_SmoothSkip(AVSValue args, void* user_data, IScriptEnvironment* env);
