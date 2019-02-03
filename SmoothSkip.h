@@ -23,7 +23,7 @@
 #include "CycleCache.h"
 #include "FrameDiff.h"
 
-#define VERSION "1.0.3"
+#define VERSION "2.0.0"
 
 class SmoothSkip : public GenericVideoFilter {
 	PClip altclip;     // The super clip from MVTools2
