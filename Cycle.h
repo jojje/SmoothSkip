@@ -20,6 +20,8 @@
 
 #include <memory>
 
+extern float sceneThreshold;
+
 typedef struct {
 	int frame;      // frame number
 	float diff;     // frame diff to previous
@@ -33,6 +35,7 @@ typedef struct {
 
 class Cycle {
 	bool sorted;
+	void sortDiffsIfNeeded();
 
 public:
 	int creates;        // number of frames to create in the cycle  (n in m creation)
@@ -47,6 +50,7 @@ public:
 	int getFrameWithLargestDiff(int offset);
 	bool includes(int frame);
 	bool isBadFrame(int n);
+	bool isSceneChange(int n);
 	void reset();
 	void updateFrameMap();
 };

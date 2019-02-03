@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include "SmoothSkip.h"
 #include "CycleCache.h"
+#include "Cycle.h"
 #include "FrameDiff.h"
 #include "3rd-party/info.h"
 
@@ -75,11 +76,13 @@ PVideoFrame __stdcall SmoothSkip::GetFrame(int n, IScriptEnvironment* env) {
 		frame = info(env, frame, msg, 0, row++);
 		sprintf(msg, "FPS:   %.3f (child: %.3f)", GetFps(this), GetFps(child));
 		frame = info(env, frame, msg, 0, row++);
+		sprintf(msg, "Scene: %.1f", sceneThreshold);
+		frame = info(env, frame, msg, 0, row++);
 		sprintf(msg, "Cycle frame diffs (child):");
 		frame = info(env, frame, msg, 0, row++);
 		for (int i = 0; i < cycle.length; i++) {
 			sprintf(msg, "%s %d (%.5f) ",
-				cycle.isBadFrame(cycle.diffs[i].frame) ? "*" : " ",
+				cycle.isSceneChange(cycle.diffs[i].frame) ? "S" : cycle.isBadFrame(cycle.diffs[i].frame) ? "*" : " ",
 				cycle.diffs[i].frame,
 				cycle.diffs[i].diff);
 			frame = info(env, frame, msg, 0, row++);
@@ -109,7 +112,7 @@ void SmoothSkip::updateCycle(IScriptEnvironment* env, int cn, VideoInfo cvi, Cyc
 
 // Constructor
 SmoothSkip::SmoothSkip(PClip _child, PClip _altclip, int cycleLen, int creates, int _offset, 
-	                   bool _debug, IScriptEnvironment* env) :
+	                   double sceneThresh, bool _debug, IScriptEnvironment* env) :
 GenericVideoFilter(_child), altclip(_altclip), offset(_offset), debug(_debug) {
 	VideoInfo avi = altclip->GetVideoInfo();
 	VideoInfo cvi = child->GetVideoInfo();
@@ -120,6 +123,9 @@ GenericVideoFilter(_child), altclip(_altclip), offset(_offset), debug(_debug) {
 	if (cycleLen > cvi.num_frames) raiseError(env, "Cycle can't be larger than the frames in source clip");
 	if (cycleLen > avi.num_frames) raiseError(env, "Cycle can't be larger than the frames in alt clip");
 	if (creates < 1 || creates > cycleLen) raiseError(env, "Create must be between 1 and the value of cycle (1 <= create <= cycle)");
+	if (sceneThresh < 0) raiseError(env, "Scene threshold must be >= 0.0");
+
+	sceneThreshold = static_cast<float>(sceneThresh); // Assign to static variable in the cycle header, so it can be used in the cycle logic
 
 	try {
 		cycles = new CycleCache(cycleLen, creates, cvi.num_frames);
@@ -146,7 +152,8 @@ AVSValue __cdecl Create_SmoothSkip(AVSValue args, void* user_data, IScriptEnviro
 		args[2].AsInt(4),      // cycle
 		args[3].AsInt(1),      // create
 		args[4].AsInt(0),      // offset
-		args[5].AsBool(false), // debug
+		args[5].AsFloat(32),   // offset
+		args[6].AsBool(false), // debug
 		env);
 }
 
@@ -188,7 +195,7 @@ FrameMap SmoothSkip::getFrameMapping(IScriptEnvironment* env, int n) {
 
 	FrameMap map = cycle.frameMap[cycleOffset];
 	if (map.dstframe != n)
-		raiseError(env, "Frame counting is out of whack");
+		raiseError(env, "BUG! Frame counting is out of whack. Please report this to the author.");
 
 	return map;
 }

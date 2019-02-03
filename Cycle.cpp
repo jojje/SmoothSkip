@@ -20,6 +20,8 @@
 #include <memory>
 #include "Cycle.h"
 
+float sceneThreshold;
+
 int cmpDescendingDiff(const void * a, const void * b);
 
 Cycle::Cycle(int length, int creates) :
@@ -75,7 +77,18 @@ bool Cycle::includes(int frame) {
 }
 
 bool Cycle::isBadFrame(int frame) {
-	for (int i = 0; i < creates; i++) {
+	// Rules:
+	// 1. A scene frame is only considered if there is at least two frames in the cycle.
+	// 2. If there are two or more frames, and at least one in the cycle is above the threshold,
+	//    then that frame will be regarded as the scene change, and all others will be judged
+	//    depending on number of creates required for the cycle (ordered by diffs in descending order).
+	sortDiffsIfNeeded();
+	int sceneChanges = 0;
+	for (int i = 0; i < creates + sceneChanges && i < length; i++) {
+		if (creates < length && sceneChanges < 1 && sceneThreshold < sortedDiffs[i].diff) {
+			sceneChanges++;
+			continue;
+		}
 		if (getFrameWithLargestDiff(i) == frame) {
 			return true;
 		}
@@ -83,14 +96,25 @@ bool Cycle::isBadFrame(int frame) {
 	return false;
 }
 
+bool Cycle::isSceneChange(int frame) {
+	sortDiffsIfNeeded();
+	return creates < length // Ignore scene change logic unless there is an *option* to select frames.
+		&& sortedDiffs[0].frame == frame
+		&& sceneThreshold < sortedDiffs[0].diff;
+}
+
 int Cycle::getFrameWithLargestDiff(int offset) {
+	sortDiffsIfNeeded();
+	if (offset > length - 1) return -1;
+	return sortedDiffs[offset].frame;
+}
+
+void Cycle::sortDiffsIfNeeded() {
 	if (!sorted) {
 		memcpy(sortedDiffs.get(), diffs.get(), length * sizeof(CycleDiff));
 		qsort(sortedDiffs.get(), length, sizeof(CycleDiff), cmpDescendingDiff);
 		sorted = true;
 	}
-	if (offset > length - 1) return -1;
-	return sortedDiffs[offset].frame;
 }
 
 int cmpDescendingDiff(const void * a, const void * b) {

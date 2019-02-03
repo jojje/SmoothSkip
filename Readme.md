@@ -26,6 +26,9 @@ Default: `1`
 When scripting AviSynth, users are prevented from accessing individual frames, as selecting frames is the purview of the application leveraging AviSynth. Filter plugins however have greater flexibility and can pick and choose which frame to use and this *offset* option gives you some flexibility in selecting replacement frames that do not necessarily reside at the same frame number as the primary clip's. Of course, you could achieve the effect of fixed offset like this by using *Trim* and *Loop*, so this is just a shorthand to save you from having to stitch and slice clips in the script.  
 Default: `-1` (frame with number before current_frame)
 
+* `scene`: Scene detection threshold.  
+Any frame difference ("YDifferenceFromPrevious") above this threshold will be regarded as a scene change. When a scene change frame is detected, the frame from the source clip will be used instead of the alt-clip. When a scene change frame is detected in a cycle, the frame with the next largest frame diff will be picked instead. In short, if a scene change is detected in a cycle, then the frame with the largest diff will be removed from skip tagging. There is _one_ exception to this rule, namely that the number of frames to "create" must be less than the "cycle" length. If both are equal, then scene detection is disabled, so as to ensure the specified number of frames to create per cycle is always followed. The exception is there to ensure audio does not get out of sync, as the number of frames inserted would otherwise be totally dependent on how many scene changes were detected in a given clip.
+
 * `debug`: Display various internal metrics as an image overlay.  
 Default: `false`
 
