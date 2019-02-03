@@ -1,8 +1,8 @@
 #include <stdlib.h>
-#include <new>
 #include "Cycle.h"
 #include "CycleCache.h"
 
+using namespace std;
 
 CycleCache::CycleCache(int cycleLength, int createsPerCycle, int clipFrameCount) : 
 	cycleLen(cycleLength), creates(createsPerCycle)
@@ -13,23 +13,15 @@ CycleCache::CycleCache(int cycleLength, int createsPerCycle, int clipFrameCount)
 	}
 
 	cycles.reserve(cycles.capacity() + cycleCount);
-	for (int i = 0; i < cycleCount; i++) {
-		cycles.push_back(new Cycle(cycleLen, creates));
-	}
-}
 
-CycleCache::~CycleCache()
-{
-	for (auto const& cycle : cycles) {
-		delete cycle;
+	for (int i = 0; i < cycleCount; i++) {
+		cycles.emplace_back(make_unique<Cycle>(cycleLen, creates));
 	}
-	cycles.clear();
-	cycles.swap(std::vector<Cycle*>());
 }
 
 Cycle* CycleCache::GetCycleForFrame(int n)
 {
 	int CycleIdx = n / (cycleLen + creates);
-	return cycles.at(CycleIdx);
+	return cycles.at(CycleIdx).get();
 }
 

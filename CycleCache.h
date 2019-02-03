@@ -21,17 +21,16 @@
 
 #include "cycle.h"
 #include <vector>
+#include <memory>
 
 class CycleCache {
 	int cycleCount;
 	int cycleLen;
 	int creates;
-	std::vector<Cycle*> cycles;
+	std::vector<std::unique_ptr<Cycle>> cycles;
 
 public:
 	CycleCache(int cycleLength, int createsPerCycle, int clipFrameCount);
-	~CycleCache();
-	bool initialize();
 	Cycle* CycleCache::GetCycleForFrame(int n);
 };
 

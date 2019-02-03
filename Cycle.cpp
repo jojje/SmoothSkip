@@ -17,28 +17,16 @@
 // USA.
 
 #include <string.h>
-#include <stdlib.h>
+#include <memory>
 #include "Cycle.h"
-#include <new>
 
 int cmpDescendingDiff(const void * a, const void * b);
 
 Cycle::Cycle(int length, int creates) : length(length), creates(creates){
-	this->diffs = (CycleDiff*)malloc(length * sizeof(CycleDiff));
-	this->sortedDiffs = (CycleDiff*)malloc(length * sizeof(CycleDiff));
-	this->frameMap = (FrameMap*)malloc((length + creates) * sizeof(FrameMap));
-	if (diffs && sortedDiffs && frameMap) {
-		reset();
-	}
-	else {
-		throw new std::bad_alloc;
-	}
-}
-
-Cycle::~Cycle() {
-	if (diffs)       free(diffs);
-	if (sortedDiffs) free(sortedDiffs);
-	if (frameMap)    free(frameMap);
+	this->diffs = std::make_unique<CycleDiff[]>(length);
+	this->sortedDiffs = std::make_unique<CycleDiff[]>(length);
+	this->frameMap = std::make_unique<FrameMap[]>(length + creates);
+	reset();
 }
 
 void Cycle::reset() {
@@ -93,8 +81,8 @@ bool Cycle::isBadFrame(int frame) {
 
 int Cycle::getFrameWithLargestDiff(int offset) {
 	if (!sorted) {
-		memcpy(sortedDiffs, diffs, length * sizeof(CycleDiff));
-		qsort(sortedDiffs, length, sizeof(CycleDiff), cmpDescendingDiff);
+		memcpy(sortedDiffs.get(), diffs.get(), length * sizeof(CycleDiff));
+		qsort(sortedDiffs.get(), length, sizeof(CycleDiff), cmpDescendingDiff);
 		sorted = true;
 	}
 	if (offset > length - 1) return -1;

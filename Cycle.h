@@ -19,6 +19,8 @@
 #ifndef __CYCLE_H
 #define __CYCLE_H
 
+#include <memory>
+
 typedef struct {
 	int frame;      // frame number
 	double diff;    // frame diff to previous
@@ -37,12 +39,11 @@ public:
 	int creates;        // number of frames to create in the cycle  (n in m creation)
 	int length;         // cycle length in frames (size of diffs)
 
-	CycleDiff* diffs;         // Array of frame diffs for the current cycle, in frame order
-	CycleDiff* sortedDiffs;   // Array of frame diffs for the current cycle, in reverse diff order
-	FrameMap* frameMap;       // Clip frame mapping for the current cycle
+	std::unique_ptr<CycleDiff[]> diffs;         // Array of frame diffs for the current cycle, in frame order
+	std::unique_ptr<CycleDiff[]> sortedDiffs;   // Array of frame diffs for the current cycle, in reverse diff order
+	std::unique_ptr<FrameMap[]> frameMap;       // Clip frame mapping for the current cycle
 
 	Cycle(int length, int creates);
-	~Cycle();
 
 	int getFrameWithLargestDiff(int offset);
 	bool includes(int frame);
