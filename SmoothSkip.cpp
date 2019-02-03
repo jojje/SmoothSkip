@@ -45,7 +45,6 @@ PVideoFrame __stdcall SmoothSkip::GetFrame(int n, IScriptEnvironment* env) {
 	Cycle &cycle = *cycles->GetCycleForFrame(n);
 
 	if (DEBUG) {
-		auto tid = GetCurrentThreadId();
 		printf("frame %d, cycle-address %X, thread-id: %X\n", n, (unsigned int)&cycle, GetCurrentThreadId());
 	}
 
