@@ -22,6 +22,9 @@
 #include <vector>
 #include <memory>
 
+/**
+ * Data structure containing all the cycles of the program.
+ */
 class CycleCache {
 	int cycleCount;
 	int cycleLen;
