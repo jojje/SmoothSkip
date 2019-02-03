@@ -1562,9 +1562,32 @@ void DrawDigit(PVideoFrame &dst, int x, int y, int num, int bYUY2)
 	}
 }
 
-void DrawString(PVideoFrame &dst, int x, int y, const char *s, int bYUY2) 
+void _DrawString(PVideoFrame &dst, int x, int y, const char *s, int bYUY2)
 {
 	for (int xx = 0; *s; ++s, ++xx) {
 		DrawDigit(dst, x + xx, y, *s - ' ', bYUY2);
+	}
+}
+
+// Wraps text line if needed, and crops it so it doesn't overflow the image area
+void DrawString(PVideoFrame &dst, int x, int y, const char *s, int bYUY2)
+{
+	int header = 6;      // number of rows for non-frame lines in first column
+	int colChars = 22;   // number characters per diff columns per
+	int charWidth = 10;  // character width in pixels
+	int w = dst->GetRowSize();
+	int h = dst->GetHeight();
+	int rows = h / 20;   // divide by font height
+	int col = y / rows;  // number of raw text columns
+
+	if (col == 0) {
+		_DrawString(dst, x, y, s, bYUY2);      // draw first column normally, as it has headers as well
+	}
+	else {                                     // Special handling for diff column 1+
+		col = (y - header) / (rows - header);  // compute diff column number
+		y += col * header;                     // add whitespace padding to top of diff columns 1-N
+		if (col * colChars * charWidth < w) {  // overflow protection for drawing
+			_DrawString(dst, col * colChars, y % rows, s, bYUY2);
+		}
 	}
 }
