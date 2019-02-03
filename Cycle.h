@@ -41,11 +41,8 @@ public:
 	CycleDiff* sortedDiffs;   // Array of frame diffs for the current cycle, in reverse diff order
 	FrameMap* frameMap;       // Clip frame mapping for the current cycle
 
-	Cycle();
+	Cycle(int length, int creates);
 	~Cycle();
-
-	// Lazy initialization, allocate memory etc as needed and return success status of the allocation. Used to avoid relying on cpp exceptions in constructor.
-	bool initialize(int length, int creates); 
 
 	int getFrameWithLargestDiff(int offset);
 	bool includes(int frame);

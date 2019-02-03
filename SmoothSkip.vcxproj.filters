@@ -21,6 +21,9 @@
     <ClInclude Include="SmoothSkip.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CycleCache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SmoothSkip.cpp">
@@ -30,6 +33,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="3rd-party\info.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CycleCache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

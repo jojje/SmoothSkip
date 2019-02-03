@@ -101,11 +101,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Cycle.h" />
+    <ClInclude Include="CycleCache.h" />
     <ClInclude Include="SmoothSkip.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="3rd-party\info.cpp" />
     <ClCompile Include="Cycle.cpp" />
+    <ClCompile Include="CycleCache.cpp" />
     <ClCompile Include="SmoothSkip.cpp" />
   </ItemGroup>
   <ItemGroup>

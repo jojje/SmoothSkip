@@ -19,29 +19,26 @@
 #include <string.h>
 #include <stdlib.h>
 #include "Cycle.h"
+#include <new>
 
 int cmpDescendingDiff(const void * a, const void * b);
 
-Cycle::Cycle(){
-	length = -1;
-	creates = -1;
+Cycle::Cycle(int length, int creates) : length(length), creates(creates){
+	this->diffs = (CycleDiff*)malloc(length * sizeof(CycleDiff));
+	this->sortedDiffs = (CycleDiff*)malloc(length * sizeof(CycleDiff));
+	this->frameMap = (FrameMap*)malloc((length + creates) * sizeof(FrameMap));
+	if (diffs && sortedDiffs && frameMap) {
+		reset();
+	}
+	else {
+		throw new std::bad_alloc;
+	}
 }
 
 Cycle::~Cycle() {
 	if (diffs)       free(diffs);
 	if (sortedDiffs) free(sortedDiffs);
 	if (frameMap)    free(frameMap);
-}
-
-bool Cycle::initialize(int length, int creates) {
-	if (this->length != -1) return true;
-	this->length = length;
-	this->creates = creates;
-	this->diffs = (CycleDiff*)malloc(length * sizeof(CycleDiff));
-	this->sortedDiffs = (CycleDiff*)malloc(length * sizeof(CycleDiff));
-	this->frameMap = (FrameMap*)malloc((length + creates) * sizeof(FrameMap));
-	if (diffs && sortedDiffs && frameMap) reset();
-	return diffs && sortedDiffs;
 }
 
 void Cycle::reset() {

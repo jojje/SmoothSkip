@@ -20,6 +20,7 @@
 #include <thread>
 #include <stdio.h>
 #include "SmoothSkip.h"
+#include "CycleCache.h"
 #include "3rd-party/info.h"
 #include "3rd-party/avsutil.h"
 
@@ -47,6 +48,7 @@ PVideoFrame __stdcall SmoothSkip::GetFrame(int n, IScriptEnvironment* env) {
 	                               // Still > 400 FPS for 1080P clip on i4770 CPU so should not be the bottleneck.
 
 	AVSValue prev_current_frame = GetVar(env, "current_frame"); // Store previous current_frame
+	Cycle &cycle = *cycles->GetCycleForFrame(n);
 
 	if (DEBUG) {
 		printf("frame %d, cycle-address %X, thread-id: %X\n", n, (unsigned int)&cycle, GetCurrentThreadId());
@@ -95,7 +97,7 @@ PVideoFrame __stdcall SmoothSkip::GetFrame(int n, IScriptEnvironment* env) {
 	return frame;
 }
 
-void SmoothSkip::updateCycle(IScriptEnvironment* env, int cn, VideoInfo cvi) {
+void SmoothSkip::updateCycle(IScriptEnvironment* env, int cn, VideoInfo cvi, Cycle& cycle) {
 	double diff = 0;
 	int i, j;
 
@@ -141,20 +143,28 @@ GenericVideoFilter(_child), altclip(_altclip), offset(_offset), diffmethod(_diff
 	if (cycleLen > avi.num_frames) raiseError(env, "Cycle can't be larger than the frames in alt clip");
 	if (creates < 1 || creates > cycleLen) raiseError(env, "Create must be between 1 and the value of cycle (1 <= create <= cycle)");
 	if (!(diffmethod == 0 || diffmethod == 1)) raiseError(env, "Diff method (dm) must be 0 or 1");
-	if (!cycle.initialize(cycleLen, creates)) raiseError(env, "Failed to allocate cycle memory");
+	//if (!cycle.initialize(cycleLen, creates)) raiseError(env, "Failed to allocate cycle memory");
+
+	try {
+		cycles = new CycleCache(cycleLen, creates, cvi.num_frames);
+	}
+	catch (std::bad_alloc) {
+		raiseError(env, "Failed to allocate cycle memory");
+	}
 
 	int newFrames = (vi.num_frames / cycleLen) * creates;    // a non-full last cycle will still introduce a new frame.
 	newFrames += min(vi.num_frames % cycleLen, creates);     // account for when the last clip cycle isn't a full one.
 	vi.MulDivFPS(cycleLen + creates, cycleLen);
 	vi.num_frames += newFrames;
 
-	child->SetCacheHints(CACHE_RANGE, cycle.length);
+	child->SetCacheHints(CACHE_RANGE, cycleLen);
 
 	initDiffClip(env);
 }
 
 SmoothSkip::~SmoothSkip() {
 	diffClip = NULL;
+	delete cycles;
 }
 
 AVSValue __cdecl Create_SmoothSkip(AVSValue args, void* user_data, IScriptEnvironment* env) {
@@ -186,16 +196,6 @@ double GetFps(PClip clip) {
 	return (double)info.fps_numerator / (double)info.fps_denominator;
 }
 
-double yDifferenceFromPrevious(IScriptEnvironment* env, PClip clip, int n) {
-	AVSValue args[1] = { clip };
-	return env->Invoke("YDifferenceFromPrevious", AVSValue(args, 1)).AsFloat();
-}
-
-double TcDifferenceFromPrevious(IScriptEnvironment* env, PClip clip, int n) {
-	AVSValue args[1] = { clip };
-	return env->Invoke("CFrameDiff", AVSValue(args, 1)).AsFloat();
-}
-
 double SmoothSkip::GetDiffFromPrevious(IScriptEnvironment* env, int n) {
 	env->SetVar("current_frame", n);        // Set frame to be tested by the conditional filters
 	env->SetGlobalVar("current_frame", n);
@@ -204,6 +204,7 @@ double SmoothSkip::GetDiffFromPrevious(IScriptEnvironment* env, int n) {
 }
 
 FrameMap SmoothSkip::getFrameMapping(IScriptEnvironment* env, int n) {
+	Cycle& cycle = *cycles->GetCycleForFrame(n);
 	int cycleCount = n / (cycle.length + cycle.creates);
 	int cycleOffset = n % (cycle.length + cycle.creates);
 	int ccsf = cycleCount * cycle.length;              // child cycle start frame
@@ -212,7 +213,7 @@ FrameMap SmoothSkip::getFrameMapping(IScriptEnvironment* env, int n) {
 		if (DEBUG) {
 			printf("Frame %d not in cycle, updating!\n", n);
 		}
-		updateCycle(env, ccsf, child->GetVideoInfo());
+		updateCycle(env, ccsf, child->GetVideoInfo(), cycle);
 	}
 
 	FrameMap map = cycle.frameMap[cycleOffset];
