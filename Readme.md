@@ -7,7 +7,7 @@ A filter plugin for AviSynth that finds the biggest frame difference(s) in cycle
 ## Usage
 The filter signature is as follows
 ```
-SmoothSkip( altClip, int "cycle", int "create", int "offset", bool "debug" )
+SmoothSkip( altClip, int "cycle", int "create", int "offset", float "scene", bool "debug" )
 
 ```
 Options:
@@ -27,7 +27,8 @@ When scripting AviSynth, users are prevented from accessing individual frames, a
 Default: `-1` (frame with number before current_frame)
 
 * `scene`: Scene detection threshold.  
-Any frame difference ("YDifferenceFromPrevious") above this threshold will be regarded as a scene change. When a scene change frame is detected, the frame from the source clip will be used instead of the alt-clip. When a scene change frame is detected in a cycle, the frame with the next largest frame diff will be picked instead. In short, if a scene change is detected in a cycle, then the frame with the largest diff will be removed from skip tagging. There is _one_ exception to this rule, namely that the number of frames to "create" must be less than the "cycle" length. If both are equal, then scene detection is disabled, so as to ensure the specified number of frames to create per cycle is always followed. The exception is there to ensure audio does not get out of sync, as the number of frames inserted would otherwise be totally dependent on how many scene changes were detected in a given clip.
+Any frame difference ("YDifferenceFromPrevious") above this threshold will be regarded as a scene change. When a scene change frame is detected, the frame from the source clip will be used instead of the alt-clip. When a scene change frame is detected in a cycle, the frame with the next largest frame diff will be picked instead. In short, if a scene change is detected in a cycle, then the frame with the largest diff will be removed from skip tagging. There is _one_ exception to this rule, namely that the number of frames to "create" must be less than the "cycle" length. If both are equal, then scene detection is disabled, so as to ensure the specified number of frames to create per cycle is always followed. The exception is there to ensure audio does not get out of sync, as the number of frames inserted would otherwise be totally dependent on how many scene changes were detected in a given clip.  
+Default: `32.0`
 
 * `debug`: Display various internal metrics as an image overlay.  
 Default: `false`
