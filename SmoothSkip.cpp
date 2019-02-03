@@ -91,7 +91,7 @@ PVideoFrame __stdcall SmoothSkip::GetFrame(int n, IScriptEnvironment* env) {
 }
 
 void SmoothSkip::updateCycle(IScriptEnvironment* env, int cn, VideoInfo cvi, Cycle& cycle) {
-	double diff = 0;
+	float diff = 0;
 	int i, j;
 
 	cycle.reset();
@@ -170,7 +170,7 @@ double GetFps(PClip clip) {
 	return (double)info.fps_numerator / (double)info.fps_denominator;
 }
 
-double SmoothSkip::GetDiffFromPrevious(IScriptEnvironment* env, int n) {
+float SmoothSkip::GetDiffFromPrevious(IScriptEnvironment* env, int n) {
 	return YDiff(child, n, -1, env);
 }
 

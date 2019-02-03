@@ -22,7 +22,7 @@
 
 typedef struct {
 	int frame;      // frame number
-	double diff;    // frame diff to previous
+	float diff;     // frame diff to previous
 } CycleDiff;
 
 typedef struct {

@@ -39,7 +39,7 @@ public:
 private:
 	void updateCycle(IScriptEnvironment* env, int n, VideoInfo cvi, Cycle& cycle);
 	PVideoFrame info(IScriptEnvironment* env, PVideoFrame src, char* msg, int x, int y);
-	double GetDiffFromPrevious(IScriptEnvironment* env, int n);
+	float GetDiffFromPrevious(IScriptEnvironment* env, int n);
 	FrameMap SmoothSkip::getFrameMapping(IScriptEnvironment* env, int n);
 };
 
