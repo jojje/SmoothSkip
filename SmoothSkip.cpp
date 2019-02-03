@@ -24,9 +24,9 @@
 #include "3rd-party/avsutil.h"
 
 #ifdef _DEBUG
-	#define DEBUG_LOG 1
+	#define DEBUG 1
 #else
-	#define DEBUG_LOG 0
+	#define DEBUG 0
 #endif
 
 CRITICAL_SECTION lock;
@@ -48,7 +48,7 @@ PVideoFrame __stdcall SmoothSkip::GetFrame(int n, IScriptEnvironment* env) {
 
 	AVSValue prev_current_frame = GetVar(env, "current_frame"); // Store previous current_frame
 
-	if (DEBUG_LOG) {
+	if (DEBUG) {
 		printf("frame %d, cycle-address %X, thread-id: %X\n", n, (unsigned int)&cycle, GetCurrentThreadId());
 	}
 
@@ -209,7 +209,7 @@ FrameMap SmoothSkip::getFrameMapping(IScriptEnvironment* env, int n) {
 	int ccsf = cycleCount * cycle.length;              // child cycle start frame
 
 	if (!cycle.includes(ccsf)) {                       // cycle boundary crossed, so update the cycle info.
-		if (DEBUG_LOG) {
+		if (DEBUG) {
 			printf("Frame %d not in cycle, updating!\n", n);
 		}
 		updateCycle(env, ccsf, child->GetVideoInfo());
