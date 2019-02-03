@@ -16,8 +16,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 // USA.
 
-#ifndef __SMOOTHSKIP_H
-#define __SMOOTHSKIP_H
+#pragma once
 
 #include "3rd-party/avisynth.h"
 #include "cycle.h"
@@ -52,5 +51,3 @@ extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit2(IScri
 }
 
 void DrawString(PVideoFrame &dst, int x, int y, const char *s, int bIsYUY2);
-
-#endif

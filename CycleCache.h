@@ -16,8 +16,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 // USA.
 
-#ifndef __CYCLECACHE_H
-#define __CYCLECACHE_H
+#pragma once
 
 #include "cycle.h"
 #include <vector>
@@ -33,5 +32,3 @@ public:
 	CycleCache(int cycleLength, int createsPerCycle, int clipFrameCount);
 	Cycle* CycleCache::GetCycleForFrame(int n);
 };
-
-#endif

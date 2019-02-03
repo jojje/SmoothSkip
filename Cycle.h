@@ -16,8 +16,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 // USA.
 
-#ifndef __CYCLE_H
-#define __CYCLE_H
+#pragma once
 
 #include <memory>
 
@@ -51,5 +50,3 @@ public:
 	void reset();
 	void updateFrameMap();
 };
-
-#endif
