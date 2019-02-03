@@ -49,11 +49,7 @@ PVideoFrame __stdcall SmoothSkip::GetFrame(int n, IScriptEnvironment* env) {
 	AVSValue prev_current_frame = GetVar(env, "current_frame"); // Store previous current_frame
 
 	if (DEBUG_LOG) {
-		char BUF[256];
-		std::thread::id tid = std::this_thread::get_id();
-		#pragma warning(suppress: 4477)
-		sprintf(BUF, "frame %d, cycle-address %X, thread-id: %X\n", n, (unsigned int)&cycle, tid);
-		printf(BUF);
+		printf("frame %d, cycle-address %X, thread-id: %X\n", n, (unsigned int)&cycle, GetCurrentThreadId());
 	}
 
 	FrameMap map = getFrameMapping(env, n);
@@ -213,6 +209,9 @@ FrameMap SmoothSkip::getFrameMapping(IScriptEnvironment* env, int n) {
 	int ccsf = cycleCount * cycle.length;              // child cycle start frame
 
 	if (!cycle.includes(ccsf)) {                       // cycle boundary crossed, so update the cycle info.
+		if (DEBUG_LOG) {
+			printf("Frame %d not in cycle, updating!\n", n);
+		}
 		updateCycle(env, ccsf, child->GetVideoInfo());
 	}
 
