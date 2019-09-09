@@ -1,6 +1,9 @@
 // Code extracted from avisynth+ conditional_functions.cpp
 // and then other places for the types and macros that function depends on, down the rabbit hole.
 //
+// Most of the code in the file is: Copyright 2002 Ben Rudiak-Gould et al.
+// Under GNU GPL, same license as that of this program.
+//
 // Q: Wy not use Invoke(YDifferenceFromPrevious)?
 // A: Because there is no way to set current_frame per thread. Only the global current_frame var
 //    makes the runtime filter pick up on a custom frame, but in an MT runtime, using the global
