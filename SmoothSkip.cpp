@@ -137,8 +137,6 @@ GenericVideoFilter(_child), altclip(_altclip), offset(_offset), debug(_debug) {
 	newFrames += min(vi.num_frames % cycleLen, creates);     // account for when the last clip cycle isn't a full one.
 	vi.MulDivFPS(cycleLen + creates, cycleLen);
 	vi.num_frames += newFrames;
-
-	child->SetCacheHints(CACHE_RANGE, cycleLen);
 }
 
 SmoothSkip::~SmoothSkip() {

@@ -45,7 +45,9 @@ private:
 
 AVSValue __cdecl Create_SmoothSkip(AVSValue args, void* user_data, IScriptEnvironment* env);
 
-extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit2(IScriptEnvironment* env) {
+const AVS_Linkage* AVS_linkage = 0;
+extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit3(IScriptEnvironment* env, const AVS_Linkage* const vectors) {
+	AVS_linkage = vectors;
 	env->AddFunction("SmoothSkip", "cc[CYCLE]i[CREATE]i[OFFSET]f[SCENE]i[DEBUG]b", Create_SmoothSkip, 0);
 	return "'SmoothSkip' plugin v" VERSION ", author: tinjon[at]gmail.com";
 }
