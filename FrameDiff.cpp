@@ -62,6 +62,7 @@ static double get_sad_c(const BYTE* c_plane8, const BYTE* t_plane8, size_t heigh
 
 }
 
+#ifndef _WIN64
 static size_t get_sad_isse(const BYTE* src_ptr, const BYTE* other_ptr, size_t height, size_t width, size_t src_pitch, size_t other_pitch) {
 	size_t mod8_width = width / 8 * 8;
 	size_t result = 0;
@@ -86,7 +87,7 @@ static size_t get_sad_isse(const BYTE* src_ptr, const BYTE* other_ptr, size_t he
 	_mm_empty();
 	return result;
 }
-
+#endif
 // works for uint8_t, but there is a specific, bit faster function above
 // also used from conditionalfunctions
 // packed rgb template masks out alpha plane for RGB32/RGB64
@@ -172,6 +173,7 @@ __int64 calculate_sad_8_or_16_sse2(const BYTE* cur_ptr, const BYTE* other_ptr, i
 	}
 	return totalsum;
 }
+// #endif
 
 int BitsPerComponent(VideoInfo& vi) {
 	// unlike BitsPerPixel, this returns the real

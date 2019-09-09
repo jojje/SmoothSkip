@@ -26,9 +26,7 @@
 #include "3rd-party/info.h"
 
 #ifdef _DEBUG
-	#define DEBUG 1
-#else
-	#define DEBUG 0
+// #define DEBUG
 #endif
 
 void raiseError(IScriptEnvironment* env, const char* msg);
@@ -44,9 +42,9 @@ PVideoFrame __stdcall SmoothSkip::GetFrame(int n, IScriptEnvironment* env) {
 
 	Cycle &cycle = *cycles->GetCycleForFrame(n);
 
-	if (DEBUG) {
-		printf("frame %d, cycle-address %X, thread-id: %X\n", n, (unsigned int)&cycle, GetCurrentThreadId());
-	}
+#ifdef DEBUG
+	printf("frame %d, cycle-address %X, thread-id: %X\n", n, (unsigned int)&cycle, GetCurrentThreadId());
+#endif
 
 	// Comparison of the source clip's previous frame is currently done single-threaded.
 	FrameMap map = getFrameMapping(env, n);
@@ -183,9 +181,9 @@ FrameMap SmoothSkip::getFrameMapping(IScriptEnvironment* env, int n) {
 	{
 		std::lock_guard<std::mutex> lockGuard(frameMappingMutex);  // Ensure only one thread updates the frame map at a time to optimize disk I/O and Avisynth cache use.
 		if (!cycle.includes(ccsf)) {                               // Cycle stats have not been computed, so try to update the cycle.
-			if (DEBUG) {
-				printf("Frame %d not in cycle, updating!\n", n);
-			}
+#ifdef DEBUG
+			printf("Frame %d not in cycle, updating!\n", n);
+#endif
 			updateCycle(env, ccsf, child->GetVideoInfo(), cycle);
 		}
 	}
