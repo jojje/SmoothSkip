@@ -1,6 +1,7 @@
 Build
 Debug
 Release
+dist
 *.vcxproj.user
 *.sdf
 *.suo

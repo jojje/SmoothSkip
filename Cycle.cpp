@@ -55,7 +55,12 @@ void Cycle::updateFrameMap() {
 
 	for (int i = 0, di = 0; i < length; i++, di++) {
 		cn = diffs[i].frame;
-		if (isBadFrame(cn)) {
+		if (isSceneChange(cn)) {
+			frameMap[di].dstframe = dstCycleStart + di;
+			frameMap[di].srcframe = cn;
+			frameMap[di].altclip = false;
+			di++;
+		} else if (isBadFrame(cn)) {
 			frameMap[di].dstframe = dstCycleStart + di;
 			frameMap[di].srcframe = cn;
 			frameMap[di].altclip = true;
@@ -78,17 +83,15 @@ bool Cycle::includes(int frame) {
 
 bool Cycle::isBadFrame(int frame) {
 	// Rules:
-	// 1. A scene frame is only considered if there is at least two frames in the cycle.
-	// 2. If there are two or more frames, and at least one in the cycle is above the threshold,
-	//    then that frame will be regarded as the scene change, and all others will be judged
-	//    depending on number of creates required for the cycle (ordered by diffs in descending order).
+	// 1. A cycle contains at most one scene change.
+	// 2. A scene change is not considered a bad frame.
+	// 3. A scene change is a frame that would be classified as Bad, but is so bad that it exceeds the schene threshold.
+	// 4. Any frame except a scene frame is judged depending on number of creates required for the cycle (ordered by diffs in descending order).
+	// Thus the top "create" frames with respect to their diff values, exclusing a possible scene change, are considered bad frames in the cycle.
 	sortDiffsIfNeeded();
-	int sceneChanges = 0;
-	for (int i = 0; i < creates + sceneChanges && i < length; i++) {
-		if (creates < length && sceneChanges < 1 && sceneThreshold < sortedDiffs[i].diff) {
-			sceneChanges++;
-			continue;
-		}
+	int sceneSchangesInCycle = hasSceneChange() ? 1 : 0;
+
+	for (int i = sceneSchangesInCycle; i < creates && i < length; i++) {
 		if (getFrameWithLargestDiff(i) == frame) {
 			return true;
 		}
@@ -98,9 +101,11 @@ bool Cycle::isBadFrame(int frame) {
 
 bool Cycle::isSceneChange(int frame) {
 	sortDiffsIfNeeded();
-	return creates < length // Ignore scene change logic unless there is an *option* to select frames.
-		&& sortedDiffs[0].frame == frame
-		&& sceneThreshold < sortedDiffs[0].diff;
+	return sortedDiffs[0].frame == frame && hasSceneChange();
+}
+
+bool Cycle::hasSceneChange() {
+	return sceneThreshold < sortedDiffs[0].diff;
 }
 
 int Cycle::getFrameWithLargestDiff(int offset) {

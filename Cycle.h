@@ -36,6 +36,7 @@ typedef struct {
 class Cycle {
 	bool sorted;
 	void sortDiffsIfNeeded();
+	bool hasSceneChange();
 
 public:
 	int creates;        // number of frames to create in the cycle  (n in m creation)
