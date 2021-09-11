@@ -1,6 +1,6 @@
 # SmoothSkip
 
-A filter plugin for AviSynth that finds the biggest frame difference(s) in cycles of frames and inserts new frames right before, frames picked from another clip.  The plugin's name hints at the original purpose, removing skips/jumps/"jerkiness" from clips that were badly recorded. See the [following][1] for a prime example.
+A filter plugin for AviSynth that finds the biggest frame difference(s) in cycles of frames and inserts new frames right before, frames picked from another clip.  The plugin's name hints at the original purpose, removing skips / jumps / judder / "jerkiness" from clips that were badly recorded. See the [following][1] for a prime example.
 
 *This filter was heavily inspired by Tritical's [TDecimate][3] filter which does the complete opposite (cyclically removing similar frames), and as such the user interface has been modeled to be familiar.*
 
@@ -27,7 +27,7 @@ When scripting AviSynth, users are prevented from accessing individual frames, a
 Default: `-1` (frame with number before current_frame)
 
 * `scene`: Scene detection threshold.  
-Any frame difference ("YDifferenceFromPrevious") above this threshold will be regarded as a scene change. When a scene change frame is detected, the frame from the source clip will be used instead of the alt-clip. When a scene change frame is detected in a cycle, the frame with the next largest frame diff will be picked instead. In short, if a scene change is detected in a cycle, then the frame with the largest diff will be removed from skip tagging. There is _one_ exception to this rule, namely that the number of frames to "create" must be less than the "cycle" length. If both are equal, then scene detection is disabled, so as to ensure the specified number of frames to create per cycle is always followed. The exception is there to ensure audio does not get out of sync, as the number of frames inserted would otherwise be totally dependent on how many scene changes were detected in a given clip.  
+Any frame difference ("YDifferenceFromPrevious") above this threshold will be regarded as a scene change. When a scene change frame is detected, the frame from the source clip will be used instead of the alt-clip. When a scene change frame is detected in a cycle, the frame with the next largest frame diff will be picked instead. In short, if a scene change is detected in a cycle, then the frame with the largest diff will be removed from skip tagging. There is _one_ exception to this rule, and that is when the cycle size is one (1). In that case, if a frame is flagged as a scene change, then a [freeze-frame][4] from the source clip will be added instead. This is to allow for sharp scene transitions (straight cuts), which look much better to the eyes than blending or interpolating the adjacent frames across a scene change.  
 Default: `32.0`
 
 * `debug`: Display various internal metrics as an image overlay.  
@@ -112,4 +112,5 @@ Fork it at [github], hack away and send a pull request.
 [1]: https://www.youtube.com/watch?v=j9cFHYHMQcY
 [2]: http://avisynth.org.ru/mvtools/mvtools.html
 [3]: http://avisynth.org.ru/docs/english/externalfilters/tivtc_tdecimate.htm
+[4]: https://www.merriam-webster.com/dictionary/freeze-frame
 [github]: http://https://github.com/jojje/SmoothSkip
