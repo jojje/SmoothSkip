@@ -31,7 +31,6 @@
 
 void raiseError(IScriptEnvironment* env, const char* msg);
 double GetFps(PClip clip);
-std::mutex frameMappingMutex;
 
 // ==========================================================================
 // PUBLIC methods
@@ -179,7 +178,7 @@ FrameMap SmoothSkip::getFrameMapping(IScriptEnvironment* env, int n) {
 	int ccsf = cycleCount * cycle.length;                          // Child cycle start frame
 
 	{
-		std::lock_guard<std::mutex> lockGuard(frameMappingMutex);  // Ensure only one thread updates the frame map at a time to optimize disk I/O and Avisynth cache use.
+		std::lock_guard<std::mutex> lockGuard(mutex);              // Ensure only one thread updates the frame map at a time to optimize disk I/O and Avisynth cache use.
 		if (!cycle.includes(ccsf)) {                               // Cycle stats have not been computed, so try to update the cycle.
 #ifdef DEBUG
 			printf("Frame %d not in cycle, updating!\n", n);

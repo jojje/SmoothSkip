@@ -29,6 +29,7 @@ class SmoothSkip : public GenericVideoFilter {
 	PClip altclip;     // The super clip from MVTools2
 	bool debug;        // debug arg
 	int offset;        // frame offset used to get frame from the alternate clip.
+	std::mutex mutex;
 
 public:
 	CycleCache* cycles;
