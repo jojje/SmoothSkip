@@ -102,6 +102,7 @@ Same base license as AviSynth; GNU GPL v2 or later.
 Fork it at [github], hack away and send a pull request.
 
 ## Release notes
+* 2.0.1 Fixes scene-change detection for single frame cycles. Now also allows the plugin to be used more than once in a script.
 * 2.0.0 Adds multithreading support, scene detection. Fixes debug paint overflow. Removes "dm" option.
 * 1.0.2 Fix bounds check on user input
 * 1.0.1 Fix for invalid end-frame calculation

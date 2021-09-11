@@ -1,6 +1,6 @@
 1 VERSIONINFO
-FILEVERSION 2,0,0,0
-PRODUCTVERSION 2,0,0,0
+FILEVERSION 2,0,1,0
+PRODUCTVERSION 2,0,1,0
 FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
   FILEFLAGS 0x1L
@@ -17,11 +17,11 @@ BEGIN
 		BEGIN
 			VALUE "ProductName",      "SmoothSkip"
 			VALUE "OriginalFilename", "SmoothSkip.dll"
-			VALUE "FileDescription",  "AviSynth plugin to lessen sharp skips/jumps in clips" 
-			VALUE "FileVersion",      "2.0.0"
-			VALUE "ProductVersion",   "2.0.0"
+			VALUE "FileDescription",  "AviSynth plugin to lessen sharp skips/jumps/judder in clips" 
+			VALUE "FileVersion",      "2.0.1"
+			VALUE "ProductVersion",   "2.0.1"
 			VALUE "InternalName",     "SmoothSkip"
-			VALUE "LegalCopyright",   "Copyright © 2019 Jonas Tingeborn"
+			VALUE "LegalCopyright",   "Copyright © 2021 Jonas Tingeborn"
 		END
 	END
 	BLOCK "VarFileInfo" 
