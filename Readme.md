@@ -54,7 +54,7 @@ Let's assume we have the same problem as in example 1, with one bad frame every 
   SmoothSkip(inter, cycle=5)
 
 ```
-In this case we let mvtools "invent" (interpolate) a new frame between the "jumpy" ones and their preceding ones. The interpolation fraction was set to 50% (time=50) which means that a frame was created in an envisioned midpoint between the current skippy one and the previous. The smoothskip filter picks those intermediate frames when it sees bad (skippy) ones, resulting in much smoother motion.
+In this case we let mvtools "invent" (interpolate) a new frame between the "jumpy" ones and their preceding ones. The interpolation fraction is set to 50% (time=50) which means that a frame is created in an envisioned midpoint between the current skippy one and the previous. The smoothskip filter picks the interpolated intermediate frames when it sees bad (skippy) ones, resulting in much smoother motion. Frames not marked as skippy are copied straight from the source clip in order to retain maximum fidelity/quality in the output clip.
 
 ### Example 3
 The following example expands on example 2 by adding the TDecimate filter to the mix, wrapping it all up in an easy to use script function for the specific use case of smoothing out stuttering video. Video that stutters because there are duplicate frames, *as well* as skippy / jumpy ones.
